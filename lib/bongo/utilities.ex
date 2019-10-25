@@ -1,23 +1,26 @@
 defmodule Bongo.Utilities do
+  @debug_config Application.get_env(:bongo, :debug, [])
 
-  @debug false
+  def get_debug_config(key) do
+    @debug_config[key]
+  end
 
   def to_struct(kind, attrs) do
     struct = struct(kind)
     struct
     |> Map.to_list()
     |> Enum.reduce(
-      struct,
-      fn {k, _}, acc ->
-        case {Map.fetch(attrs, Atom.to_string(k)), Map.fetch(attrs, k)} do
-          {{:ok, _}, {:ok, v2}} -> %{acc | k => v2}
-          #fixme v1 or v2 what to take bruh ?
-          {{:ok, v}, :error} -> %{acc | k => v}
-          {:error, {:ok, v}} -> %{acc | k => v}
-          {:error, :error} -> acc
-        end
-      end
-    )
+         struct,
+         fn {k, _}, acc ->
+           case {Map.fetch(attrs, Atom.to_string(k)), Map.fetch(attrs, k)} do
+             {{:ok, _}, {:ok, v2}} -> %{acc | k => v2}
+             #fixme v1 or v2 what to take bruh ?
+             {{:ok, v}, :error} -> %{acc | k => v}
+             {:error, {:ok, v}} -> %{acc | k => v}
+             {:error, :error} -> acc
+           end
+         end
+       )
   end
 
   def filter_nils(nil) do
@@ -25,15 +28,21 @@ defmodule Bongo.Utilities do
   end
 
   def filter_nils(keyword) when is_list(keyword) do
-    Enum.reject(keyword, fn {_key, value} ->
-      is_nil(value) or value == :blackhole
-    end)
+    Enum.reject(
+      keyword,
+      fn {_key, value} ->
+        is_nil(value) or value == :blackhole
+      end
+    )
   end
 
   def filter_nils(map) when is_map(map) do
-    Enum.reject(map, fn {_key, value} ->
-      is_nil(value) or value == :blackhole
-    end)
+    Enum.reject(
+      map,
+      fn {_key, value} ->
+        is_nil(value) or value == :blackhole
+      end
+    )
     |> Enum.into(%{})
   end
 
@@ -60,7 +69,7 @@ defmodule Bongo.Utilities do
   end
 
   defmacro debug_log(value, label \\ "->") do
-    if @debug do
+    if get_debug_config(:debug_log) do
       quote do
         IO.inspect(inspect(unquote(value)), label: unquote(label))
       end

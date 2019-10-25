@@ -80,7 +80,7 @@ defmodule Bongo.Converter.In do
         {i_module, module, value},
         "failed to normalize {i_module,module,value} "
       )
-         value
+      value
   end
 
   def convert_in(%{} = value, type, lenient) do
@@ -173,14 +173,16 @@ defmodule Bongo.Converter.In do
       false -> defaults
     end
     in_types ++ mongo_internals_keywords_list
-    |> Enum.map(fn {k, v} ->
-      {
-        k,
-        item
-        |> Map.get(k, Keyword.get(defaults, k))
-        |> convert_in(v, lenient)
-      }
-    end)
+    |> Enum.map(
+         fn {k, v} ->
+           {
+             k,
+             item
+             |> Map.get(k, Keyword.get(defaults, k))
+             |> convert_in(v, lenient)
+           }
+         end
+       )
     |> Map.new()
     |> Map.drop(mongo_internals_keywords_list_keys)
     |> Bongo.Utilities.nil_filter(opts)
